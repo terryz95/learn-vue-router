@@ -1,5 +1,6 @@
 /* @flow */
 
+// 导航守卫函数队列执行器
 export function runQueue (queue: Array<?NavigationGuard>, fn: Function, cb: Function) {
   const step = index => {
     if (index >= queue.length) {

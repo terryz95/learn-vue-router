@@ -5,6 +5,7 @@ import { stringifyQuery } from './query'
 
 const trailingSlashRE = /\/?$/
 
+// Location => Route
 export function createRoute (
   record: ?RouteRecord,
   location: Location,

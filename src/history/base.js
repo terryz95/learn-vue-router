@@ -169,6 +169,7 @@ export class History {
       route.matched
     )
 
+    // 一堆NavigationGuard函数组成的数组
     const queue: Array<?NavigationGuard> = [].concat(
       // in-component leave guards
       extractLeaveGuards(deactivated),
@@ -182,11 +183,13 @@ export class History {
       resolveAsyncComponents(activated)
     )
 
+    // 导航守卫函数迭代器
     const iterator = (hook: NavigationGuard, next) => {
       if (this.pending !== route) {
         return abort(createNavigationCancelledError(current, route))
       }
       try {
+        // 导航守卫真正执行的地方形参对应to, from, next
         hook(route, current, (to: any) => {
           if (to === false) {
             // next(false) -> abort navigation, ensure current URL

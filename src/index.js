@@ -45,9 +45,12 @@ export default class VueRouter {
     this.beforeHooks = []
     this.resolveHooks = []
     this.afterHooks = []
+    // routes配置列表 + router实例 => match,addRoutes,addRoute,getRoutes四个方法
     this.matcher = createMatcher(options.routes || [], this)
 
+    // hash | history | abstract
     let mode = options.mode || 'hash'
+    // 当浏览器不支持pushState时是否回退到hash模式
     this.fallback =
       mode === 'history' && !supportsPushState && options.fallback !== false
     if (this.fallback) {
@@ -56,8 +59,10 @@ export default class VueRouter {
     if (!inBrowser) {
       mode = 'abstract'
     }
+    // 拿到最终mode
     this.mode = mode
 
+    // 根据不同mode建立不同类实例
     switch (mode) {
       case 'history':
         this.history = new HTML5History(this, options.base)
@@ -117,6 +122,7 @@ export default class VueRouter {
     const history = this.history
 
     if (history instanceof HTML5History || history instanceof HashHistory) {
+      // 处理滚动
       const handleInitialScroll = routeOrError => {
         const from = history.current
         const expectScroll = this.options.scrollBehavior
@@ -198,6 +204,7 @@ export default class VueRouter {
     this.go(1)
   }
 
+  // 返回目标位置或是当前路由匹配的组件数组 (是数组的定义/构造类，不是实例)
   getMatchedComponents (to?: RawLocation | Route): Array<any> {
     const route: any = to
       ? to.matched

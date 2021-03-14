@@ -4,6 +4,8 @@ import Regexp from 'path-to-regexp'
 import { cleanPath } from './util/path'
 import { assert, warn } from './util/warn'
 
+// 路由配置表 => {path数组, path到RouteRecord的映射, name到RouteRecord的映射}
+// 转换过程是递归的，但转换结果（映射Map）是扁平化、非嵌套的。映射Map将所有匹配到的路由记录类型枚举出来
 export function createRouteMap (
   routes: Array<RouteConfig>,
   oldPathList?: Array<string>,
@@ -27,6 +29,7 @@ export function createRouteMap (
   })
 
   // ensure wildcard routes are always at the end
+  // path = * 的记录总是在最后
   for (let i = 0, l = pathList.length; i < l; i++) {
     if (pathList[i] === '*') {
       pathList.push(pathList.splice(i, 1)[0])
@@ -83,6 +86,7 @@ function addRouteRecord (
 
   const pathToRegexpOptions: PathToRegexpOptions =
     route.pathToRegexpOptions || {}
+  // 格式化path 
   const normalizedPath = normalizePath(path, parent, pathToRegexpOptions.strict)
 
   if (typeof route.caseSensitive === 'boolean') {
@@ -114,6 +118,7 @@ function addRouteRecord (
           : { default: route.props }
   }
 
+  // 有children递归执行addRouteRecord
   if (route.children) {
     // Warn if route is named, does not redirect and has a default child route.
     // If users navigate to this route by name, the default child will
@@ -144,11 +149,13 @@ function addRouteRecord (
     })
   }
 
+  // 向pathList、pathMap中添加记录
   if (!pathMap[record.path]) {
     pathList.push(record.path)
     pathMap[record.path] = record
   }
 
+  // 如果配置了alias，还要追加带有alias的path的记录
   if (route.alias !== undefined) {
     const aliases = Array.isArray(route.alias) ? route.alias : [route.alias]
     for (let i = 0; i < aliases.length; ++i) {
@@ -177,6 +184,7 @@ function addRouteRecord (
     }
   }
 
+  // 向nameMap中添加记录
   if (name) {
     if (!nameMap[name]) {
       nameMap[name] = record
@@ -190,6 +198,7 @@ function addRouteRecord (
   }
 }
 
+// 解析出正则模式，传给RouteRecord.regex
 function compileRouteRegex (
   path: string,
   pathToRegexpOptions: PathToRegexpOptions
@@ -208,6 +217,7 @@ function compileRouteRegex (
   return regex
 }
 
+// 格式化路径
 function normalizePath (
   path: string,
   parent?: RouteRecord,
