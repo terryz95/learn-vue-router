@@ -104,7 +104,7 @@
 
 ## 思维导图
 
-![初始化](./初始化过程.svg)
+![初始化](./初始化过程.png)
 
 ## 解析核心流程和特性
 
@@ -122,7 +122,7 @@
 
 ### 4. 路由参数、查询、通配符
 
-1. 地址对象转换成路由对象的过程[createRoute](./src/utils/route.js)
+1. 地址对象转换成路由对象的过程[createRoute](./src/util/route.js)
 
 2. `this.$route`怎么变成当前路由对象的？
 
@@ -176,4 +176,4 @@ this.mode = mode
 
 ### 9. 自定义的滚动条行为
 
-[scroll](./src/utils/scroll.js)
+[scroll](./src/util/scroll.js)
