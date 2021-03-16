@@ -62,6 +62,8 @@ export function handleScroll (
       return
     }
 
+    // 异步滚动
+    // https://router.vuejs.org/zh/guide/advanced/scroll-behavior.html#%E5%BC%82%E6%AD%A5%E6%BB%9A%E5%8A%A8
     if (typeof shouldScroll.then === 'function') {
       shouldScroll
         .then(shouldScroll => {
@@ -89,6 +91,7 @@ export function saveScrollPosition () {
 }
 
 function handlePopState (e) {
+  // popstate时会保存页面的位置
   saveScrollPosition()
   if (e.state && e.state.key) {
     setStateKey(e.state.key)
@@ -138,7 +141,10 @@ const hashStartsWithNumberRE = /^#\d/
 
 function scrollToPosition (shouldScroll, position) {
   const isObject = typeof shouldScroll === 'object'
+  
+  // 计算最终position
   if (isObject && typeof shouldScroll.selector === 'string') {
+    // 返回值指定了selector
     // getElementById would still fail if the selector contains a more complicated query like #main[data-attr]
     // but at the same time, it doesn't make much sense to select an element with an id and an extra selector
     const el = hashStartsWithNumberRE.test(shouldScroll.selector) // $flow-disable-line
@@ -156,6 +162,7 @@ function scrollToPosition (shouldScroll, position) {
       position = normalizePosition(shouldScroll)
     }
   } else if (isObject && isValidPosition(shouldScroll)) {
+    // 返回值{x: number, y: number}
     position = normalizePosition(shouldScroll)
   }
 

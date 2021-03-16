@@ -122,7 +122,7 @@ export default class VueRouter {
     const history = this.history
 
     if (history instanceof HTML5History || history instanceof HashHistory) {
-      // 处理滚动
+      // 处理初始滚动
       const handleInitialScroll = routeOrError => {
         const from = history.current
         const expectScroll = this.options.scrollBehavior
@@ -143,6 +143,7 @@ export default class VueRouter {
       )
     }
 
+    // 统一路由对象
     history.listen(route => {
       this.apps.forEach(app => {
         app._route = route
