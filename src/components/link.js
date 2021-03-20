@@ -51,6 +51,7 @@ export default {
       this.append
     )
 
+    // class处理
     const classes = {}
     const globalActiveClass = router.options.linkActiveClass
     const globalExactActiveClass = router.options.linkExactActiveClass
@@ -84,11 +85,13 @@ export default {
         if (this.replace) {
           router.replace(location, noop)
         } else {
-          router.push(location, noop)
+          debugger
+          console.log(router.push(location, noop))
         }
       }
     }
 
+    // 判断用什么事件触发跳转handler
     const on = { click: guardEvent }
     if (Array.isArray(this.event)) {
       this.event.forEach(e => {
@@ -100,6 +103,7 @@ export default {
 
     const data: any = { class: classes }
 
+    // 处理下插槽逻辑 
     const scopedSlot =
       !this.$scopedSlots.$hasNormal &&
       this.$scopedSlots.default &&
@@ -149,11 +153,13 @@ export default {
     }
 
     if (this.tag === 'a') {
+      // 如果渲染成a标签，则把href也指定一下
       data.on = on
       data.attrs = { href, 'aria-current': ariaCurrentValue }
     } else {
       // find the first <a> child and apply listener and href
       const a = findAnchor(this.$slots.default)
+      // 如果是router-link内部的第一个a标签，把这个标签原本的event handler和定义router-link触发跳转的event handler组合，确保都能被执行
       if (a) {
         // in case the <a> is a static node
         a.isStatic = false

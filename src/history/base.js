@@ -63,6 +63,7 @@ export class History {
     this.cb = cb
   }
 
+  // 排队cb，到时候会被router实例调用，对应router.onReady方法
   onReady (cb: Function, errorCb: ?Function) {
     if (this.ready) {
       cb()
@@ -74,6 +75,7 @@ export class History {
     }
   }
 
+  // 排队cb，到时候会被router实例调用，对应router.onError方法
   onError (errorCb: Function) {
     this.errorCbs.push(errorCb)
   }
@@ -86,8 +88,10 @@ export class History {
     let route
     // catch redirect option https://github.com/vuejs/vue-router/issues/3201
     try {
+      // RawLocation => Route
       route = this.router.match(location, this.current)
     } catch (e) {
+      // onError捕获的cb统统执行
       this.errorCbs.forEach(cb => {
         cb(e)
       })
@@ -101,6 +105,7 @@ export class History {
         this.updateRoute(route)
         onComplete && onComplete(route)
         this.ensureURL()
+        // 执行由afterEach注册进来的全局的导航守卫
         this.router.afterHooks.forEach(hook => {
           hook && hook(route, prev)
         })
@@ -122,6 +127,8 @@ export class History {
           // because it's triggered by the redirection instead
           // https://github.com/vuejs/vue-router/issues/3225
           // https://github.com/vuejs/vue-router/issues/3331
+
+          // 执行router.onReady(callback, [errorCallback])收集来的errorCb
           if (!isNavigationFailure(err, NavigationFailureType.redirected) || prev !== START) {
             this.ready = true
             this.readyErrorCbs.forEach(cb => {
@@ -140,11 +147,15 @@ export class History {
       // changed after adding errors with
       // https://github.com/vuejs/vue-router/pull/3047 before that change,
       // redirect and aborted navigation would produce an err == null
+      console.log(err, isNavigationFailure(err), isError(err))
       if (!isNavigationFailure(err) && isError(err)) {
+        debugger
         if (this.errorCbs.length) {
+          console.log(this.errorCbs)
           this.errorCbs.forEach(cb => {
             cb(err)
           })
+          debugger
         } else {
           warn(false, 'uncaught error during route navigation:')
           console.error(err)
@@ -160,10 +171,18 @@ export class History {
       lastRouteIndex === lastCurrentIndex &&
       route.matched[lastRouteIndex] === current.matched[lastCurrentIndex]
     ) {
+      // 前后跳转的是同一个路由，报错
       this.ensureURL()
       return abort(createNavigationDuplicatedError(current, route))
     }
 
+    /**
+     * {
+     *   updated: Array<RouteRecord>,
+     *   deactivated: Array<RouteRecord>,
+     *   activated: Array<RouteRecord>
+     * }
+     */
     const { updated, deactivated, activated } = resolveQueue(
       this.current.matched,
       route.matched
@@ -172,14 +191,19 @@ export class History {
     // 一堆NavigationGuard函数组成的数组
     const queue: Array<?NavigationGuard> = [].concat(
       // in-component leave guards
+      // 组件内的beforeRouteLeave
       extractLeaveGuards(deactivated),
       // global before hooks
+      // 全局前置守卫
       this.router.beforeHooks,
       // in-component update hooks
+      // 组件内的beforeRouteUpdate
       extractUpdateHooks(updated),
       // in-config enter guards
+      // 配置进来的路由独享守卫beforeEnter (RouterConfig beforeEnter => RouterRecord beforeEnter)
       activated.map(m => m.beforeEnter),
       // async components
+      // 解析异步组件
       resolveAsyncComponents(activated)
     )
 
@@ -223,13 +247,17 @@ export class History {
     runQueue(queue, iterator, () => {
       // wait until async components are resolved before
       // extracting in-component enter guards
+      // 组件内的beforeRouteEnter
       const enterGuards = extractEnterGuards(activated)
+      // 接上全局解析守卫
       const queue = enterGuards.concat(this.router.resolveHooks)
       runQueue(queue, iterator, () => {
         if (this.pending !== route) {
           return abort(createNavigationCancelledError(current, route))
         }
         this.pending = null
+        // 这个地方时真正执行参数onComplete的地方，也就是后续updateRoute的地方
+        // 注意此时不仅已经迭代完成外层queue中的导航守卫函数队列(line 188)，还完成了组件beforeRouteEnter和全局beforeResolve两个守卫函数队列
         onComplete(route)
         if (this.router.app) {
           this.router.app.$nextTick(() => {

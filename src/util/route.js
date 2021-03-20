@@ -138,6 +138,7 @@ function queryIncludes (current: Dictionary<string>, target: Dictionary<string>)
 
 export function handleRouteEntered (route: Route) {
   for (let i = 0; i < route.matched.length; i++) {
+    // RouteRecord
     const record = route.matched[i]
     for (const name in record.instances) {
       const instance = record.instances[name]

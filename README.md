@@ -8,6 +8,14 @@
 
 安装了`babel-node`以便在[test/index.js](./test/index.js)中使用`yarn run test`测试你想测试的代码。不过要注意将测试代码和依赖代码中的flow类型注释删除掉。
 
+此版本中进行了比较多的学习注释，可以边看Readme边捋源码。
+
+理解源码的几个小技巧
+
+1. 结合官方文档的api用法，先过一遍Typescript类型定义，或是flow也可，熟悉各个环节数据的结构。
+2. **囫囵吞枣**地过大体流程，再次结合官方文档的api用法，逐个api再过一遍（有很多冷门api可能都未曾用过）。
+3. 利用demo进行console + 断点调试大法，较细致地串联每一个环节，这个环节是比较费时的，也是最提升代码理解力的；多细致算细致？因为每一次调试对源码的理解会逐渐加深，对“细致”的标准也会变化。我的建议是，每次调试不要因为某一个细节始终不理解就一直卡在那里，可以把局部逻辑视为“黑盒”，只要理解到它在干嘛即可，内部环节不理解马上跳过，留给下一波逐个攻克。这样每一个“黑盒”也会慢慢变小。
+
 ## 认识几个比较主要的类型定义
 
 1. `RouteConfig` 路由配置对象
@@ -104,23 +112,47 @@
 
 ## 思维导图
 
-![初始化](./初始化过程.png)
+![初始化](./初始化.png)
 
 ![路由更新](./路由更新.png)
 
 ## 解析核心流程和特性
 
-### 1. 路由初始化
+### 1. transitionTo
 
-待补充
+[base.js](./src/history/base.js)
 
-### 2. 路由跳转
+```typescript
+// transitionTo签名
+transitionTo(location: RawLocation, onComplete?: Function, onAbort?: Function)
+/** transitionTo干的事情 **/
+// 1. 把RawLocation转换成Route路由对象，若出错依次执行errorCbs
+let route
+route = this.router.match(location, this.current)
+// 2. 实际执行confirmTransition方法，传入上一步获取的route以及一个onComplete方法、一个onAbort方法(对transitionTo入参方法的加工)
 
-待补充
+
+
+// confirmTransition签名
+confirmTransition(route: Route, onComplete: Function, onAbort?: Function)
+/** confirmTransition干的事情 **/
+/**
+* 1. 定义一个abort函数：依次执行errorCbs，再执行transitionTo传进来的onAbort
+* 2. 确保前后transitionTo的不是同一个路由对象，否则报错
+* 3. 解析出属于updated的RouteRecord;属于actived的RouteRecord;属于deactivated的RouteRecord
+* 4. 将上述分好类的RouteRecord分别传给对应生命周期的路由守卫函数，先形成一个路由守卫函数队列A
+* 5. 定义导航守卫函数的迭代执行器
+* 6. 迭代器执行路由守卫函数队列A，在第一次迭代完成后再定义一个路由守卫函数队列B
+* 7. 再次用迭代器执行路由守卫函数队列B,在第二次迭代完成之后执行传入的onComplete
+* 整个过程中如果出错则执行最先定义的abort函数
+* /
+
+```
 
 ### 3. 嵌套的路由/视图表；模块化的、基于组件的路由配置
 
 1. 路由配置表转换成路由记录映射的过程[create-route-map](./src/create-route-map.js)
+2. [route-view](./src/components/view.js)是如何处理嵌套路由的渲染问题的？关键：递归渲染；缓存组件
 
 ### 4. 路由参数、查询、通配符
 
@@ -151,7 +183,7 @@
 
 此处我理解指的是导航守卫的执行
 
-待补充
+见[transitionTo](#1. transitionTo)解析，如何将收集起来的路由守卫函数按照生命周期执行
 
 ### 7. 带有自动激活的 CSS class 的链接
 
@@ -179,3 +211,9 @@ this.mode = mode
 ### 9. 自定义的滚动条行为
 
 [scroll](./src/util/scroll.js)
+
+在每次处理滚动逻辑(handleScroll)之前，都会有`supportScroll`的检测，其中包含`supportPushState`的检测；这也是为什么滚动行为只能在支持`history.pushState`API的浏览器中表现正常
+
+本质是利用`window.scrollTo`来滚动到计算好的position`{x: number, y: number}`
+
+另外保留滚动位置的原理时在pushState和popState时都会缓存`{x: window.pageXOffset, y: window.pageYOffset}`即一个有值的`savedPosition`

@@ -26,6 +26,7 @@ export default {
     // has been toggled inactive but kept-alive.
     let depth = 0
     let inactive = false
+    // 向父级递归确认深度、确认是否存在keepAlive
     while (parent && parent._routerRoot !== parent) {
       const vnodeData = parent.$vnode ? parent.$vnode.data : {}
       if (vnodeData.routerView) {
@@ -34,11 +35,15 @@ export default {
       if (vnodeData.keepAlive && parent._directInactive && parent._inactive) {
         inactive = true
       }
+      console.log(parent)
       parent = parent.$parent
+      debugger
     }
     data.routerViewDepth = depth
+    console.log(data, depth, inactive)
 
     // render previous view if the tree is inactive and kept-alive
+    // 如果inactive标识=true，去渲染缓存组件
     if (inactive) {
       const cachedData = cache[name]
       const cachedComponent = cachedData && cachedData.component
@@ -55,17 +60,26 @@ export default {
       }
     }
 
+    // 此处往下都是inactive=false
+    // 根据深度信息确定matched RouteRecord和对应Component
     const matched = route.matched[depth]
     const component = matched && matched.components[name]
 
+    console.log(matched, component)
+
     // render empty node if no matched route or no config component
+    // 没找着就渲染空
     if (!matched || !component) {
       cache[name] = null
       return h()
     }
 
     // cache component
+    // 缓存组件
+    // name(router-view的name) => component
     cache[name] = { component }
+
+    // 注册一些钩子
 
     // attach instance registration hook
     // this will be called in the instance's injected lifecycle hooks
@@ -103,6 +117,12 @@ export default {
     }
 
     const configProps = matched.props && matched.props[name]
+
+    // 如果RouteConfig配置了props，RouteRecord的props就会有{ name1: xxx, name2: xxx }
+    // name1和name2都是命名视图的名称，就是router-view的name prop
+    // 会把$route和配置的props里面的东西extend到命名缓存中，就是前面的cache[name] = { component }
+    // 再改造一下data中的props和attrs
+
     // save route and configProps in cache
     if (configProps) {
       extend(cache[name], {

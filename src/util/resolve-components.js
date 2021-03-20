@@ -83,6 +83,7 @@ export function flatMapComponents (
   }))
 }
 
+// 扁平化数组（可以扁平一级）
 export function flatten (arr: Array<any>): Array<any> {
   return Array.prototype.concat.apply([], arr)
 }
