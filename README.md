@@ -183,7 +183,7 @@ confirmTransition(route: Route, onComplete: Function, onAbort?: Function)
 
 此处我理解指的是导航守卫的执行
 
-见[transitionTo](#1. transitionTo)解析，如何将收集起来的路由守卫函数按照生命周期执行
+见[transitionTo](#1-transitionto)解析，如何将收集起来的路由守卫函数按照生命周期执行
 
 ### 7. 带有自动激活的 CSS class 的链接
 
