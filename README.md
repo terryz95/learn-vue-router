@@ -216,4 +216,4 @@ this.mode = mode
 
 本质是利用`window.scrollTo`来滚动到计算好的position`{x: number, y: number}`
 
-另外保留滚动位置的原理时在pushState和popState时都会缓存`{x: window.pageXOffset, y: window.pageYOffset}`即一个有值的`savedPosition`
+另外保留滚动位置的原理时在popState时都会缓存`{x: window.pageXOffset, y: window.pageYOffset}`即一个有值的`savedPosition`
